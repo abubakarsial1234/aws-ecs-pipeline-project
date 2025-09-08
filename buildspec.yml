@@ -4,21 +4,20 @@ phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      # Naya, reliable tareeqa Account ID haasil karne ka
       - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
   build:
     commands:
       - echo Build started on `date`
-      - echo Pulling NGINX image...
-      - docker pull nginx:latest
-      # Yahan bhi ACCOUNT_ID variable istemal karein
-      - docker tag nginx:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-frontend-app:latest
+      - echo Pulling NGINX image from ECR Public...
+      # Yahan hum ne Docker Hub ki bajaye ECR Public ka address diya hai
+      - docker pull public.ecr.aws/nginx/nginx:latest
+      # Yahan bhi ECR Public wala address istemal hoga
+      - docker tag public.ecr.aws/nginx/nginx:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-frontend-app:latest
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
-      # Yahan bhi ACCOUNT_ID variable istemal karein
       - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-frontend-app:latest
       - echo Writing image definitions file...
       - printf '[{"name":"my-container","imageUri":"%s"}]' $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-frontend-app:latest > imagedefinitions.json
