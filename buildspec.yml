@@ -4,20 +4,24 @@ phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      # Naya, reliable tareeqa Account ID haasil karne ka
+      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
   build:
     commands:
       - echo Build started on `date`
       - echo Pulling NGINX image...
       - docker pull nginx:latest
-      - docker tag nginx:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-frontend-app:latest
+      # Yahan bhi ACCOUNT_ID variable istemal karein
+      - docker tag nginx:latest $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-frontend-app:latest
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-frontend-app:latest
+      # Yahan bhi ACCOUNT_ID variable istemal karein
+      - docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-frontend-app:latest
       - echo Writing image definitions file...
-      - printf '[{"name":"my-container","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-frontend-app:latest > imagedefinitions.json
+      - printf '[{"name":"my-container","imageUri":"%s"}]' $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/my-frontend-app:latest > imagedefinitions.json
 
 artifacts:
   files: imagedefinitions.json
